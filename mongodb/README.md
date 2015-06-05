@@ -13,13 +13,13 @@ The above diagram shows how MongoDB differs from the traditional relational
 database model. In an RDBMS, the data associated with 'user' is stored in a
 table, and the records of users are stored in rows and columns. In MongoDB, the
 'table' is replaced by a 'collection' and the individual 'records' are called
-'documents'.  One thing to notice is that the data is stored as key/value pairs
+'documents'. One thing to notice is that the data is stored as key/value pairs
 in BJSON format.
 
 Another thing to notice is that NoSQL-style databases have a looser consistency
 model. As an example, the second document in the users collection has an
 additonal field of 'last name'.
- 
+
 ### Data Replication
 ------------------------------------
 
@@ -29,7 +29,7 @@ Data backup is achieved in MongoDB via _replica sets_. As the figure above shows
 a single replication set consists of a replication master (active) and several
 other replications slaves (passive). All the database operations like
 add/delete/update happen on the replication master and the master replicates
-the data to the slave nodes. _mongod_ is the process which is resposible for all
+the data to the slave nodes. _mongod_ is the process which is responsible for all
 the database activities as well as replication processes. The minimum
 recommended number of slave servers are 3.
 
@@ -45,7 +45,7 @@ server: the first shard getting ranges from 1-29,  and so on. When a client want
 to access a certian document it contacts the query router (mongos process),
 which in turn contacts the 'configuration node', a lightweight mongod
 process) that keeps a record of which ranges of chunks are distributed across
-which shards. 
+which shards.
 
 Please do note that every shard server should be backed by a replica set, so
 that when data is written/queried copies of the data are available. So in a
@@ -70,7 +70,7 @@ collection is split and balanced across shards.
 ----------------------------
 
 ![Alt text](images/site.png "Site")
-  
+
 The diagram above illustrates the deployment model for a MongoDB cluster deployed by
 Ansible. This deployment model focuses on deploying three shard servers,
 each having a replica set, with the backup replica servers serving as the other two shard
@@ -85,7 +85,7 @@ all the processes are secured using keyfiles.
 Edit the group_vars/all file to reflect the below variables.
 
 1) iface: 'eth1'     # the interface to be used for all communication.
-		
+
 2) Set a unique mongod_port variable in the inventory file for each MongoDB
 server.
 
@@ -114,7 +114,7 @@ The inventory file looks as follows:
 		mongo2
 		mongo3
 
-		#The list of servers where mongos servers would run. 
+		#The list of servers where mongos servers would run.
 		[mongos_servers]
 		mongos1
 		mongos2
@@ -124,7 +124,7 @@ Build the site with the following command:
 		ansible-playbook -i hosts site.yml
 
 
-#### Verifying the Deployment 
+#### Verifying the Deployment
 ---------------------------------------------
 
 Once configuration and deployment has completed we can check replication set
@@ -132,7 +132,7 @@ availibitly by connecting to individual primary replication set nodes, 'mongo
 --host 192.168.1.1 --port 2700' and issue the command to query the status of
 replication set, we should get a similar output.
 
-		
+
 		web2:PRIMARY> rs.status()
 		{
 			"set" : "web2",
@@ -172,9 +172,9 @@ We can check the status of the shards as follows: connect to the mongos service
 the status of the Shards:
 
 
-		 
+
 		mongos> sh.status()
-		--- Sharding Status --- 
+		--- Sharding Status ---
 		  sharding version: { "_id" : 1, "version" : 3 }
 		  shards:
 			{  "_id" : "web2",  "host" : "web2/web2:2013,web3:2013" }
@@ -196,7 +196,7 @@ The above mentioned steps can be tested with an automated playbook.
 
 Issue the following command to run the test. Pass one of the _mongos_ servers
 in the _servername_ variable.
-		
+
 		ansible-playbook -i hosts playbooks/testsharding.yml -e servername=server1
 
 
@@ -205,7 +205,7 @@ on to any mongos server and issuing the following command. The output displays
 the number of chunks spread across the shards.
 
 		mongos> sh.status()
-			--- Sharding Status --- 
+			--- Sharding Status ---
   			sharding version: { "_id" : 1, "version" : 3 }
   			shards:
 			{  "_id" : "bensible",  "host" : "bensible/bensible:20103,web2:20103,web3:20103" }
@@ -214,16 +214,16 @@ the number of chunks spread across the shards.
   			databases:
 			{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
 			{  "_id" : "test",  "partitioned" : true,  "primary" : "web3" }
-			
+
 				test.test_collection chunks:
-				
+
 				bensible	7
 				web2	6
 				web3	7
-			
-			
 
- 
+
+
+
 ### Scaling the Cluster
 ---------------------------------------
 
@@ -251,7 +251,7 @@ To add a new node to the existing MongoDB Cluster, modify the inventory file as 
 		mongo2
 		mongo3
 
-		#The list of servers where mongos servers would run. 
+		#The list of servers where mongos servers would run.
 		[mongos_servers]
 		mongos1
 		mongos2
@@ -269,7 +269,7 @@ seeing the chunks being rebalanced to the newly added node.
 
 			$/usr/bin/mongo localhost:8888/admin -u admin -p 123456
 			mongos> sh.status()
-				--- Sharding Status --- 
+				--- Sharding Status ---
   				sharding version: { "_id" : 1, "version" : 3 }
   			shards:
 			{  "_id" : "bensible",  "host" : "bensible/bensible:20103,web2:20103,web3:20103" }
@@ -279,12 +279,10 @@ seeing the chunks being rebalanced to the newly added node.
   			databases:
 			{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
 			{  "_id" : "test",  "partitioned" : true,  "primary" : "bensible" }
-		
+
 			test.test_collection chunks:
-			
+
 				web4	3
 				web3	6
 				web2	6
 				bensible	5
-
-    
