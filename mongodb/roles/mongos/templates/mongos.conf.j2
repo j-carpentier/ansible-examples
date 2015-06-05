@@ -1,5 +1,5 @@
 #where to log
-logpath=/var/log/mongo/mongos.log
+logpath=/var/log/mongodb/mongos.log
 
 logappend=true
 
@@ -21,3 +21,4 @@ port = {{ mongos_port }}
 pidfilepath = /var/run/mongodb/mongos.pid
 keyFile={{ mongodb_datadir_prefix }}/secret
 chunkSize={{ mongos_chunk_size }}
+
